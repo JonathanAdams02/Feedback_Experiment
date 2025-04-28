@@ -27,15 +27,27 @@ const jsPsych = initJsPsych({
     // Add each trial as a row
     responseData.forEach((trial, index) => {
       const trialNumber = index + 1;
-      // Use . as decimal separator
-      const feedback = trial.feedback_deviation.toFixed(1);
-      const gratingOrientation = trial.stimulus_orientation.toFixed(1);
-      const responseOrientation = trial.response_orientation.toFixed(1);
-      const deviation = trial.actual_deviation.toFixed(1);
-      const accuracy = trial.accuracy.toFixed(3);
-      const confidence = trial.confidence_rating !== undefined ? trial.confidence_rating : "NA";
-      textContent += `${participant_id}\t${participant_age}\t${participant_gender}\t${trialNumber}\t${trial.shape}\t${trial.condition}\t${gratingOrientation}\t${responseOrientation}\t${deviation}\t${accuracy}\t${confidence}\t${feedback}\n`;
       
+      // Use trial.shape directly in the output string, no need for separate variables
+      
+      // Use . as decimal separator and handle potential undefined values
+      const feedback = trial.feedback_deviation ? trial.feedback_deviation.toFixed(1) : "NA";
+      const gratingOrientation = trial.stimulus_orientation ? trial.stimulus_orientation.toFixed(1) : "NA";
+      const responseOrientation = trial.response_orientation ? trial.response_orientation.toFixed(1) : "NA";
+      const deviation = trial.actual_deviation ? trial.actual_deviation.toFixed(1) : "NA";
+      const accuracy = trial.accuracy ? trial.accuracy.toFixed(3) : "NA";
+      
+      // Get the corresponding confidence rating for this trial
+      const confidenceData = jsPsych.data.get().filter({
+        task: 'confidence',
+        trial_nr: trial.trial_nr
+      }).values()[0];
+      
+      const confidence = confidenceData && confidenceData.confidence_rating !== undefined 
+        ? confidenceData.confidence_rating 
+        : "NA";
+      
+      textContent += `${participant_id}\t${participant_age}\t${participant_gender}\t${trialNumber}\t${trial.shape}\t${trial.condition}\t${gratingOrientation}\t${responseOrientation}\t${deviation}\t${accuracy}\t${confidence}\t${feedback}\n`;
     });
     
     // Create a Blob and download
@@ -56,7 +68,7 @@ const jsPsych = initJsPsych({
   
   
   // Experiment parameters
-  const NUM_TRIALS_PER_SHAPE = 5; // Reduced for testing, increase for real experiment
+  const NUM_TRIALS_PER_SHAPE = 30; // Reduced for testing, increase for real experiment
   const SHAPES = ['square', 'circle', 'hexagon'];
   const CARDINAL_DIRECTIONS = [0, 90]; // Cardinal orientations in degrees
   
@@ -75,7 +87,12 @@ const jsPsych = initJsPsych({
   let participant_age = "";
   let participant_gender = "";
   let trial_counter = 0;
-  
+
+  let currentTrialInfo = {
+    shape: null,
+    condition: null,
+    stimulus_orientation: null
+  };
   // Confidence scale direction (will be determined by participant ID)
   let confidence_scale_direction = 'left_low';
   
@@ -137,9 +154,11 @@ const jsPsych = initJsPsych({
     stimulus: `
       <div class="instructions">
         <h1 style="font-size: 36px;">Welcome to the Orientation Matching Experiment</h1>
-        <p style="font-size: 24px;">Press any key to continue.</p>
+        <p style="font-size: 24px;">Please press f11 before starting, to make the experiment full screen.</p>
+        <p style="font-size: 24px;">Press space to continue.</p>
       </div>
-    `
+    `,
+    choices: [' ']
   };
   
   // Instructions
@@ -295,12 +314,14 @@ const jsPsych = initJsPsych({
             },
             choices: [' '],
             data: function() {
-              trial_counter++;
-              return {
-                task: 'response',
-                trial_nr: trial_counter
-              }
-            },
+                trial_counter++;
+                return {
+                  task: 'response',
+                  trial_nr: trial_counter,
+                  shape: shapeCondition.shape,
+                  condition: shapeCondition.condition
+                }
+              },
             on_load: function() {
               try {
                 // Get the canvas element
@@ -377,10 +398,10 @@ const jsPsych = initJsPsych({
                     
                     if (stimulusData) {
                       // Copy forward the stimulus information
-                      data.shape = stimulusData.shape;
-                      data.condition = stimulusData.condition;
-                      data.stimulus_orientation = stimulusData.orientation;
-                      
+                      data.shape = shapeCondition.shape; // Direct assignment from closure variable
+                        data.condition = shapeCondition.condition; // Direct assignment from closure variable
+                        data.stimulus_orientation = stimulusData.orientation;
+
                       // Add the response information - IMPORTANT: use the current value, not the initial one
                       data.response_orientation = currentAngle; // Using the local variable with current value
                       window.currentResponseAngle = currentAngle; // Update global variable for backup
@@ -460,7 +481,11 @@ const jsPsych = initJsPsych({
                         biased_feedback_applied: data.biased_feedback_applied,
                         trial_nr: data.trial_nr
                       };
-                      
+                      currentTrialInfo = {
+                        shape: data.shape,
+                        condition: data.condition,
+                        stimulus_orientation: data.stimulus_orientation
+                      };
                       console.log("Response data processed:", data);
                       console.log("Condition:", data.condition);
                       console.log("Actual deviation:", data.actual_deviation.toFixed(1));
