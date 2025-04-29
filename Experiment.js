@@ -147,6 +147,13 @@ const jsPsych = initJsPsych({
       console.log("Confidence scale direction:", confidence_scale_direction);
     }
   };
+
+  /* Fullscreen */
+gotofullscreen = {
+  type: jsPsychFullscreen,
+  fullscreen_mode: true
+}
+
   
   // Welcome message
   const welcome = {
@@ -154,8 +161,7 @@ const jsPsych = initJsPsych({
     stimulus: `
       <div class="instructions">
         <h1 style="font-size: 36px;">Welcome to the Orientation Matching Experiment</h1>
-        <p style="font-size: 24px;">Please press f11 before starting, to make the experiment full screen.</p>
-        <p style="font-size: 24px;">Press space to continue.</p>
+        </p style="font-size: 24px;">Press space to continue.</p>
       </div>
     `,
     choices: [' ']
@@ -179,24 +185,24 @@ const jsPsych = initJsPsych({
     `
   };
   
-  // Define condition info trial for testing
-  const condition_info_trial = {
+// Define condition info trial for testing
+const condition_info_trial = {
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: function() {
-      // Create a formatted display of condition-shape mapping
-      let display = `
+    stimulus: function () {
+        // Create a formatted display of condition-shape mapping
+        let display = `
         <div class="instructions">
           <h2 style="font-size: 32px;">Condition Information (Testing Only)</h2>
           <p style="font-size: 24px;">Shape to Condition Mapping:</p>
           <ul style="text-align: left; font-size: 20px; list-style-position: inside; margin: 20px 0;">
       `;
-      
-      // Add each condition
-      shapeFeedbackConditions.forEach(cond => {
-        display += `<li><strong>${cond.shape}</strong>: ${cond.condition} feedback condition</li>`;
-      });
-      
-      display += `
+
+        // Add each condition
+        shapeFeedbackConditions.forEach(cond => {
+            display += `<li><strong>${cond.shape}</strong>: ${cond.condition} feedback condition</li>`;
+        });
+
+        display += `
           </ul>
           <p style="font-size: 20px; margin-top: 20px;">Neutral = accurate feedback</p>
           <p style="font-size: 20px;">Negative = feedback shows 15° worse than actual (on 75% of trials)</p>
@@ -204,11 +210,11 @@ const jsPsych = initJsPsych({
           <p style="font-size: 24px; margin-top: 30px;">Press any key to begin the experiment.</p>
         </div>
       `;
-      
-      return display;
+
+        return display;
     },
     choices: "ALL_KEYS"
-  };
+};
   
   // Function to create an SVG with a shape containing a grating
   function createGratingStimulus(shape, orientation) {
@@ -785,6 +791,7 @@ const jsPsych = initJsPsych({
   // Define the timeline
   const timeline = [
     participant_id_trial,
+    gotofullscreen,
     welcome,
     instructions,
     condition_info_trial, // Information about conditions for testing
@@ -794,4 +801,4 @@ const jsPsych = initJsPsych({
   ];
   
   // Run the experiment
-  jsPsych.run(timeline);
+  jsPsych.run(timeline); 
