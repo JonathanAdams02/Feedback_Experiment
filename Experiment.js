@@ -4,18 +4,25 @@
 
 // Initialize jsPsych with the target element and data saving
 const jsPsych = initJsPsych({
-    show_progress_bar: true,
-    display_element: 'jspsych-target',
-    on_finish: function() {
-      // Display data in browser for debugging
-      jsPsych.data.displayData();
-      
-      // Save data to tab-delimited text file
-      saveDataToTxt();
-      
-      console.log('Experiment completed');
-    }
-  });
+  show_progress_bar: true,
+  display_element: 'jspsych-target',
+  on_finish: function() {
+    // Save data to tab-delimited text file
+    saveDataToTxt();
+    
+    // Clear the display element
+    document.getElementById('jspsych-target').innerHTML = '';
+    
+    // Create and display a thank you message
+    const thankYouMessage = document.createElement('div');
+    thankYouMessage.innerHTML = '<h2>Thank you for participating!</h2><p>You can now close this tab.</p>';
+    thankYouMessage.style.textAlign = 'center';
+    thankYouMessage.style.marginTop = '50px';
+    document.getElementById('jspsych-target').appendChild(thankYouMessage);
+    
+    console.log('Experiment completed');
+  }
+});
   
   // Function to save data as tab delimited text file
   function saveDataToTxt() {
@@ -791,8 +798,8 @@ const condition_info_trial = {
   
   // Define the timeline
   const timeline = [
-    participant_id_trial,
     gotofullscreen,
+    participant_id_trial,
     welcome,
     instructions,
     condition_info_trial, // Information about conditions for testing
