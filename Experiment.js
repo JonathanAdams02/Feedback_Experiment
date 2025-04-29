@@ -4,6 +4,7 @@
 
 // Initialize jsPsych with the target element and data saving
 const jsPsych = initJsPsych({
+    show_progress_bar: true,
     display_element: 'jspsych-target',
     on_finish: function() {
       // Display data in browser for debugging
@@ -802,3 +803,4 @@ const condition_info_trial = {
   
   // Run the experiment
   jsPsych.run(timeline); 
+  
